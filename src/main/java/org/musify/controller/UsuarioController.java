@@ -1,14 +1,14 @@
 package org.musify.controller;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.musify.model.Usuario;
-import org.musify.model.UsuarioFactory;
-import org.musify.model.UsuarioGratuito;
-import org.musify.model.UsuarioRegistroDTO;
+import org.musify.model.usuario.Usuario;
+import org.musify.model.usuario.UsuarioFactory;
+import org.musify.model.usuario.UsuarioRegistroDTO;
 import org.musify.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -20,6 +20,8 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+
 
     @GetMapping("/{nickname}")
     public ResponseEntity<?> getUsuarioByNickname(@PathVariable String nickname) {
@@ -51,11 +53,15 @@ public class UsuarioController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/crearUsuario")
     public ResponseEntity<?> postUsuario(@RequestBody UsuarioRegistroDTO u) {
         try {
             // Llama al método en service
             Usuario nuevoUsuario = UsuarioFactory.crearUsuarioPorRol(u.getRol());
+
+            //Se encripta la contraseña antes de guardar en la base de datos
+            String contraEncriptada = new BCryptPasswordEncoder().encode(u.getContra());
+            u.setContra(contraEncriptada);
             nuevoUsuario=usuarioService.crearUsuario(u, nuevoUsuario);
 
             // Crear la URI para retornar la ubicación del nuevo usuario
